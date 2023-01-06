@@ -1,14 +1,13 @@
 from flask_sqlalchemy import SQLAlchemy
 import os
 
-# DB_USER = os.environ['DATABASE_USER']
-# DB_PASS = os.environ['DATABASE_PASSWORD']
-# DB_NAME = os.environ['DATABASE_NAME']
-# DB_PORT = os.environ['DATABASE_PORT']
-# DB_HOST = os.environ['DATABASE_HOST']
+DB_USER = os.environ['DATABASE_USER']
+DB_PASS = os.environ['DATABASE_PASSWORD']
+DB_NAME = os.environ['DATABASE_NAME']
+DB_PORT = os.environ['DATABASE_PORT']
+DB_HOST = os.environ['DATABASE_HOST']
 
-# database_path = 'postgresql://{}/{}'.format(''+DB_USER+':'+DB_PASS+'@'+DB_HOST+':'+DB_PORT, DB_NAME)
-database_path = 'postgresql://postgres:admin123@194.195.119.7:5432/test_erp'
+database_path = 'postgresql://{}/{}'.format(''+DB_USER+':'+DB_PASS+'@'+DB_HOST+':'+DB_PORT, DB_NAME)
 
 db = SQLAlchemy()
 
