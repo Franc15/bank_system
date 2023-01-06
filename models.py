@@ -71,10 +71,32 @@ class AccountType(db.Model):
     interest_rate = db.Column(db.Float)
     accounts = db.relationship('Account', backref='account_type')
 
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "description": self.description,
+            "interest_rate": self.interest_rate
+        }
+
 class Branch(db.Model):
     __tablename__ = 'branches'
     id = db.Column(db.Integer, primary_key=True)
     address = db.Column(db.String(120))
     phone = db.Column(db.String(120))
     accounts = db.relationship('Account', backref='branch')
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def serialize(self):
+        return {
+            'id': self.id,
+            'address': self.address,
+            'phone': self.phone
+        }
 

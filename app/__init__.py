@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, abort
-from models import setup_db, User, Customer
+from models import setup_db, AccountType, Customer, Branch
 import bcrypt
 from datetime import datetime
 
@@ -44,11 +44,51 @@ def create_app(test_config=None):
 
             return jsonify({
                 'success': True,
-                'user': new_customer.serialize()
+                'customer': new_customer.serialize()
             })
         elif request.method == 'GET':
             customers = Customer.query.all()
             return jsonify([customer.serialize() for customer in customers])
+
+    @app.route('/branches', methods=['GET', 'POST'])
+    def handle_branches():
+        if request.method == 'POST':
+            body = request.get_json()
+
+            new_branch = Branch(
+                address=body.get('address'),
+                phone=body.get('phone')
+            )
+
+            new_branch.insert()
+            return jsonify({
+                'status': True,
+                'branch': new_branch.serialize()
+            })
+        elif request.method == 'GET':
+            branches = Branch.query.all()
+            return jsonify([branch.serialize() for branch in branches])
+
+
+    @app.route('/account_types', methods=['GET', 'POST'])
+    def handle_account_types():
+        if request.method == 'POST':
+            body = request.get_json()
+
+            new_account_type = AccountType(
+                description=body.get('description'),
+                interest_rate=body.get('interest_rate')
+            )
+
+            new_account_type.insert()
+
+            return jsonify({
+                'success': True,
+                'account_type': new_account_type.serialize()
+            })
+        elif request.method == 'GET':
+            account_types = AccountType.query.all()
+            return jsonify([account_type.serialize() for account_type in account_types])
 
     def check_user_reg_empty_fields(body):
         if not body.get('name'):
