@@ -41,6 +41,10 @@ class Customer(User):
     def __repr__(self):
         return f'<Customer: {self.name}, id: {self.id} >'
 
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
     def serialize(self):
         return {
             'id': self.id,

@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request, abort
 from models import setup_db, User, Customer
 import bcrypt
+from datetime import datetime
 
 def create_app(test_config=None):
     # create and configure the app
@@ -26,23 +27,19 @@ def create_app(test_config=None):
             body = request.get_json()
 
             # check if any of the fields are empty
-            check_empty_fields(body)
-
-            password = body.get('password')
+            check_user_reg_empty_fields(body)
             
             hashed_password = bcrypt.hashpw(body.get('password').encode('utf-8'), bcrypt.gensalt())
-    
+
             new_customer = Customer(
-                first_name=body.get('first_name'),
-                last_name=body.get('last_name'),
-                dob=body.get('dob'),
-                gender = body.get('gender'),
+                name=body.get('name'),
+                phone=body.get('phone'),
+                login=body.get('login'),
                 email=body.get('email'),
-                password=hashed_password,
-                address=body.get('address'),
-                employer=body.get('employer'),
-                job_title=body.get('job_title')
+                reg_date=datetime.now(),
+                passhash=hashed_password
             )
+
             new_customer.insert()
 
             return jsonify({
@@ -50,21 +47,19 @@ def create_app(test_config=None):
                 'user': new_customer.serialize()
             })
         elif request.method == 'GET':
-            users = User.query.all()
-            return jsonify([user.serialize() for user in users])
+            customers = Customer.query.all()
+            return jsonify([customer.serialize() for customer in customers])
 
-    def check_empty_fields(body):
-        if not body.get('first_name'):
+    def check_user_reg_empty_fields(body):
+        if not body.get('name'):
             abort(400)
-        if not body.get('last_name'):
+        if not body.get('phone'):
             abort(400)
-        if not body.get('dob'):
-            abort(400)
-        if not body.get('gender'):
-            abort(400)
-        if not body.get('email'):
+        if not body.get('login'):
             abort(400)
         if not body.get('password'):
+            abort(400)
+        if not body.get('email'):
             abort(400)
 
 
