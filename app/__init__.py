@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, abort
-from models import setup_db, AccountType, Customer, Branch
+from models import setup_db, AccountType, Customer, Branch, Account
 import bcrypt
 from datetime import datetime
 
@@ -89,6 +89,31 @@ def create_app(test_config=None):
         elif request.method == 'GET':
             account_types = AccountType.query.all()
             return jsonify([account_type.serialize() for account_type in account_types])
+
+    @app.route('/accounts', methods=['GET', 'POST'])
+    def handle_accounts():
+        if request.method == 'POST':
+            body=request.get_json()
+            customer = Customer.query.filter_by(id=body.get('customer_id')).one()
+            branch = Branch.query.filter_by(id=body.get('branch_id')).one()
+            account_type = AccountType.query.filter_by(id=body.get('account_type_id')).one()
+
+            new_account = Account(
+                balance=500,
+                opening_date=datetime.now(),
+                customer=customer,
+                branch=branch,
+                account_type=account_type
+            )
+
+            new_account.insert()
+
+            return jsonify({
+                'success': True,
+                'new_account': new_account.serialize()
+            })
+        elif request.method == 'GET':
+            pass
 
     def check_user_reg_empty_fields(body):
         if not body.get('name'):

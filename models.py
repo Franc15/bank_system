@@ -64,6 +64,19 @@ class Account(db.Model):
     type = db.Column(db.Integer, db.ForeignKey('account_types.id'))
     branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'))
 
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "branch_address": self.branch.address,
+            "customer_id": self.customer.id,
+            "balance": self.balance,
+            "type": self.account_type.serialize()['description']
+        }
+
 class AccountType(db.Model):
     __tablename__ = 'account_types'
     id = db.Column(db.Integer, primary_key=True)
