@@ -21,7 +21,7 @@ def create_app(test_config=None):
     def hello_world():
         return 'Hello, World!'
 
-    @app.route('/users', methods=['GET', 'POST'])
+    @app.route('/customers', methods=['GET', 'POST'])
     def handle_users():
         if request.method == 'POST':
             body = request.get_json()
@@ -113,7 +113,8 @@ def create_app(test_config=None):
                 'new_account': new_account.serialize()
             })
         elif request.method == 'GET':
-            pass
+            accounts = Account.query.all()
+            return jsonify([account.serialize() for account in accounts])
 
     def check_user_reg_empty_fields(body):
         if not body.get('name'):
