@@ -35,6 +35,7 @@ class Customer(User):
     __tablename__ = 'customers'
     email = db.Column(db.String(120))
     reg_date = db.Column(db.Date())
+    accounts = db.relationship('Account', backref='customer')
 
     def __repr__(self):
         return f'<Customer: {self.name}, id: {self.id} >'
@@ -48,4 +49,27 @@ class Customer(User):
             'email': self.email,
             'reg_date': self.reg_date
         }
+
+class Account(db.Model):
+    __tablename__ = 'accounts'
+    id = db.Column(db.Integer, primary_key=True)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
+    opening_date = db.Column(db.Date())
+    balance = db.Column(db.Numeric(10, 2))
+    type = db.Column(db.Integer, db.ForeignKey('account_types.id'))
+    branch_id = db.Column(db.Integer, db.ForeignKey('branches.id'))
+
+class AccountType(db.Model):
+    __tablename__ = 'account_types'
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(120))
+    interest_rate = db.Column(db.Float)
+    accounts = db.relationship('Account', backref='account_type')
+
+class Branch(db.Model):
+    __tablename__ = 'branches'
+    id = db.Column(db.Integer, primary_key=True)
+    address = db.Column(db.String(120))
+    phone = db.Column(db.String(120))
+    accounts = db.relationship(db.Integer, backref='branch')
 
