@@ -4,6 +4,13 @@ import bcrypt
 from datetime import datetime
 from flask_cors import CORS
 
+import os
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
@@ -11,6 +18,9 @@ def create_app(test_config=None):
     setup_db(app)
 
     CORS(app)
+
+    app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
+    jwt = JWTManager(app)
 
     @app.after_request
     def after_request(response):
@@ -91,8 +101,8 @@ def create_app(test_config=None):
             account_types = AccountType.query.all()
             return jsonify([account_type.serialize() for account_type in account_types])
 
-    @app.route('/accounts', methods=['GET', 'POST'])
-    def handle_accounts():
+    # @app.route('/accounts', methods=['GET', 'POST'])
+    # def handle_accounts():
         if request.method == 'POST':
             body=request.get_json()
             customer = Customer.query.filter_by(id=body.get('customer_id')).one()
@@ -116,6 +126,42 @@ def create_app(test_config=None):
         elif request.method == 'GET':
             accounts = Account.query.all()
             return jsonify([account.serialize() for account in accounts])
+
+    @app.route('/customers/<int:customer_id>/accounts', methods=['GET', 'POST'])
+    @jwt_required()
+    def handle_user_account(customer_id):
+        customer_identity = get_jwt_identity()
+        if customer_identity != customer_id:
+            abort(401)
+
+        customer = Customer.query.filter_by(id=customer_identity).one()
+
+        if request.method == 'POST':
+            body = request.get_json()
+
+            account_type = AccountType.query.filter_by(id=body.get('account_type_id')).one()
+            branch = Branch.query.filter_by(id=body.get('branch_id')).one()
+
+            account = Account(
+                balance=500,
+                opening_date=datetime.now(),
+                customer=customer,
+                branch=branch,
+                account_type=account_type
+            )
+
+            account.insert()
+
+            return jsonify({
+                'success': True,
+                'account': account.serialize()
+            })
+        elif request.method == 'GET':
+            return jsonify({
+                'success': True,
+                'accounts': [account.serialize() for account in customer.accounts]
+            })
+
 
     def check_user_reg_empty_fields(body):
         if not body.get('name'):
@@ -147,10 +193,13 @@ def create_app(test_config=None):
             hashed=customer.passhash
 
             if check_password(body.get('password'), hashed):
+                access_token = create_access_token(identity=customer.id)
                 return jsonify({
                     'success': True,
-                    'token': 'test123'
+                    'token': access_token,
+                    'current_user': customer.id
                 })
+
             else:
                 return jsonify({
                     'success': False,
