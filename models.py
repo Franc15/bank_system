@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 import os
+import bcrypt
 
 DB_USER = os.environ['DATABASE_USER']
 DB_PASS = os.environ['DATABASE_PASSWORD']
@@ -28,7 +29,7 @@ class User(db.Model):
     name = db.Column(db.String(120))
     phone = db.Column(db.String(120))
     login = db.Column(db.String(120))
-    passhash = db.Column(db.String())
+    passhash = db.Column(db.Text)
 
     
 class Customer(User):
@@ -43,6 +44,7 @@ class Customer(User):
     def insert(self):
         db.session.add(self)
         db.session.commit()
+
 
     def serialize(self):
         return {

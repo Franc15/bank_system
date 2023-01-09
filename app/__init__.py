@@ -2,6 +2,7 @@ from flask import Flask, jsonify, request, abort
 from models import setup_db, AccountType, Customer, Branch, Account
 import bcrypt
 from datetime import datetime
+from flask_cors import CORS
 
 def create_app(test_config=None):
     # create and configure the app
@@ -9,7 +10,7 @@ def create_app(test_config=None):
     app.app_context().push()
     setup_db(app)
 
-    # CORS(app)
+    CORS(app)
 
     @app.after_request
     def after_request(response):
@@ -29,7 +30,7 @@ def create_app(test_config=None):
             # check if any of the fields are empty
             check_user_reg_empty_fields(body)
             
-            hashed_password = bcrypt.hashpw(body.get('password').encode('utf-8'), bcrypt.gensalt())
+            # hashed_password = bcrypt.hashpw(body.get('password').encode('utf-8'), bcrypt.gensalt())
 
             new_customer = Customer(
                 name=body.get('name'),
@@ -37,7 +38,7 @@ def create_app(test_config=None):
                 login=body.get('login'),
                 email=body.get('email'),
                 reg_date=datetime.now(),
-                passhash=hashed_password
+                passhash=body.get('password')
             )
 
             new_customer.insert()
@@ -129,7 +130,36 @@ def create_app(test_config=None):
             abort(400)
 
 
-    # def check_password(password, hashed_password):
-    #     return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+    def check_password(password, hashed_password):
+        # return bcrypt.checkpw(password.encode('utf-8'), hashed_password)
+        
+        if password == hashed_password:
+            return True
+        else:
+            return False
+
+    @app.route('/login', methods=['POST'])
+    def login():
+        body = request.get_json()
+
+        customer=Customer.query.filter_by(login=body.get('username')).first()
+        if customer:
+            hashed=customer.passhash
+
+            if check_password(body.get('password'), hashed):
+                return jsonify({
+                    'success': True,
+                    'token': 'test123'
+                })
+            else:
+                return jsonify({
+                    'success': False,
+                    'message': 'incorrect password'
+                })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'user not exist'
+            })
     
     return app
