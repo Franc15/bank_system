@@ -2,11 +2,17 @@ from flask_sqlalchemy import SQLAlchemy
 import os
 import bcrypt
 
-DB_USER = os.environ['DATABASE_USER']
-DB_PASS = os.environ['DATABASE_PASSWORD']
-DB_NAME = os.environ['DATABASE_NAME']
-DB_PORT = os.environ['DATABASE_PORT']
-DB_HOST = os.environ['DATABASE_HOST']
+# DB_USER = os.environ['DATABASE_USER']
+# DB_PASS = os.environ['DATABASE_PASSWORD']
+# DB_NAME = os.environ['DATABASE_NAME']
+# DB_PORT = os.environ['DATABASE_PORT']
+# DB_HOST = os.environ['DATABASE_HOST']
+
+DB_USER = 'postgres'
+DB_PASS = 'franc123'
+DB_NAME = 'test_erp'
+DB_PORT = '5432'
+DB_HOST = 'localhost'
 
 database_path = 'postgresql://{}/{}'.format(''+DB_USER+':'+DB_PASS+'@'+DB_HOST+':'+DB_PORT, DB_NAME)
 
@@ -77,6 +83,49 @@ class Account(db.Model):
             "balance": self.balance,
             "type": self.account_type.serialize()['description']
         }
+
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    amount = db.Column(db.Numeric(10,2))
+    from_account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    to_account_id = db.Column(db.Integer, db.ForeignKey('accounts.id'))
+    from_account = db.relationship('Account', foreign_keys=[from_account_id], backref='from_account')
+    to_account = db.relationship('Account', foreign_keys=[to_account_id], backref='to_account')
+    datetime = db.Column(db.Date())
+    type = db.Column(db.Integer, db.ForeignKey('transaction_types.id'))
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "amount": self.amount,
+            "from_account_id": self.from_account_id,
+            "to_account_id": self.to_account_id,
+            "datetime": self.datetime,
+            "type": self.transaction_type.description
+        }
+
+
+class TransactionType(db.Model):
+    __tablename__ = 'transaction_types'
+    id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.String(20))
+    transactions = db.relationship('Transaction', backref='transaction_type')
+
+    def insert(self):
+        db.session.add(self)
+        db.session.commit()
+
+    def serialize(self):
+        return {
+            "id": self.id,
+            "description": self.description
+        }
+
 
 class AccountType(db.Model):
     __tablename__ = 'account_types'

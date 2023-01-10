@@ -20,6 +20,7 @@ def create_app(test_config=None):
     CORS(app)
 
     app.config['JWT_SECRET_KEY'] = os.environ['JWT_SECRET_KEY']
+    # app.config['JWT_SECRET_KEY'] = 'fdsfwegwegwgeeerwg'
     jwt = JWTManager(app)
 
     @app.after_request
