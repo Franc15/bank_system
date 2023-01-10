@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, abort
-from models import setup_db, AccountType, Customer, Branch, Account
+from models import setup_db, AccountType, Customer, Branch, Account, TransactionType, Transaction
 import bcrypt
 from datetime import datetime
 from flask_cors import CORS
@@ -161,6 +161,49 @@ def create_app(test_config=None):
             return jsonify({
                 'success': True,
                 'accounts': [account.serialize() for account in customer.accounts]
+            })
+
+    @app.route('/accounts/<int:account_id>/transactions', methods=['GET', 'POST'])
+    @jwt_required()
+    def handle_account_transactions(account_id):
+        account = Account.query.filter_by(id=account_id).one()
+        customer_identity = get_jwt_identity()
+
+        # if customer_identity != account.customer_id:
+        #     abort(401)
+
+        if request.method == 'POST':
+            body = request.get_json()
+
+            transaction_type = TransactionType.query.filter_by(id=body.get('transaction_type_id')).one()
+            to_account_id = body.get('to_account_id')
+
+            to_account = Account.query.filter_by(id=to_account_id).one()
+
+            transaction = Transaction(
+                amount=body.get('amount'),
+                datetime=datetime.now(),
+                transaction_type=transaction_type,
+                from_account=account,
+                to_account=to_account
+            )
+
+            transaction.insert()
+
+            to_account.balance += transaction.amount
+            to_account.update()
+            account.balance -= transaction.amount
+            account.update()
+
+            return jsonify({
+                'success': True,
+                'transaction': transaction.serialize()
+            })
+        elif request.method == 'GET':
+            transactions = Transaction.query.filter_by(from_account_id=account_id).all()
+            return jsonify({
+                'success': True,
+                'transactions': [transaction.serialize() for transaction in transactions]
             })
 
 
