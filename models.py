@@ -65,6 +65,7 @@ class Customer(User):
 class Account(db.Model):
     __tablename__ = 'accounts'
     id = db.Column(db.Integer, primary_key=True)
+    account_no = db.Column(db.String(120))
     customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
     opening_date = db.Column(db.Date())
     balance = db.Column(db.Numeric(10, 2))
@@ -84,6 +85,7 @@ class Account(db.Model):
             "branch_address": self.branch.address,
             "customer_id": self.customer.id,
             "balance": self.balance,
+            "account_no": self.account_no,
             "type": self.account_type.serialize()['description']
         }
 
@@ -107,6 +109,7 @@ class Transaction(db.Model):
             "id": self.id,
             "amount": self.amount,
             "from_account_id": self.from_account_id,
+            "from_account": self.from_account.serialize(),
             "to_account_id": self.to_account_id,
             "datetime": self.datetime,
             "type": self.transaction_type.description

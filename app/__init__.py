@@ -140,11 +140,16 @@ def create_app(test_config=None):
         if request.method == 'POST':
             body = request.get_json()
 
+            # TODO: check if any of the fields are empty
+            # TODO: check if the customer has an account with the same branch and account type
+            # TODO: generate unique bank account number
+
             account_type = AccountType.query.filter_by(id=body.get('account_type_id')).one()
             branch = Branch.query.filter_by(id=body.get('branch_id')).one()
 
             account = Account(
                 balance=500,
+                account_no=body.get('acc_no'),
                 opening_date=datetime.now(),
                 customer=customer,
                 branch=branch,
@@ -200,7 +205,9 @@ def create_app(test_config=None):
                 'transaction': transaction.serialize()
             })
         elif request.method == 'GET':
-            transactions = Transaction.query.filter_by(from_account_id=account_id).all()
+            # query to get transactions either from or to the account
+            transactions = Transaction.query.filter((Transaction.from_account_id == account_id) | (Transaction.to_account_id == account_id)).all()
+            # transactions = Transaction.query.filter( ).all()
             return jsonify({
                 'success': True,
                 'transactions': [transaction.serialize() for transaction in transactions]
